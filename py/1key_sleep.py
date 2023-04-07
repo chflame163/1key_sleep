@@ -1,98 +1,127 @@
 """
-****Mac版一键睡眠, 用快捷键实现关闭显示器/系统睡眠****
+****MacOS version one click sleep, with shortcut keys to turn off monitor/system sleep****
 
-按快捷键将触发以下功能：
-"FIRST_FUNCTION_KEY" + "MASTER_KEY" = "关闭显示器"
-"FIRST_FUNCTION_KEY" + "SECOND_FUNCTION_KEY" + "MASTER_KEY" = "系统睡眠"
-同时在Mac OS系统状态栏显示"月亮"图标，点击出现菜单："关闭显示器"、"系统睡眠"、"退出"，
-点击菜单亦触发对应功能。
-注：初次运行app时，弹窗提示'"1KeySleep"想接收来着任何应用程序的按键'，此时应打开'系统偏好设置'，
-   在'安全性与隐私'-'隐私'-'输入监听'和'辅助功能'栏目中允许1KeySleep(解锁后勾选)
-   建议在'系统偏好设置'-'用户与群组'-'登录项'中加入app，随系统自动启动本程序。
+Pressing the shortcut key will trigger the following functions:
+"FIRST_FUNCTION_KEY" + "MASTER_KEY" = "Turn off display"
+"FIRST_FUNCTION_KEY" + "SECOND_FUNCTION_KEY" + "MASTER_KEY" = "System sleep"
+At the same time, the "Moon" icon is displayed in the Mac OS system status bar,
+and the menu appears by clicking on it: "Turn off display", "System sleep", "Quit",
+Clicking on the menu also triggers the corresponding function.
 
-快捷键自定义：
-FUNCTION_KEY 应为 control / option / command / shift 其中之一，
-MASTER_KEY 则可以是任何键。
-对于打包的app， 右键点击-"显示包内容"-Contents-Resources，找到keysetting.cfg，
-用'文本编辑'打开这个文件，修改前三行的键值，保存然后重新运行。
-对于py文件，keysetting.cfg将在首次运行时生成于文件夹"../Resources"下。
-另一种方法是直接修改py代码中的按键定义，这些定义位于<class Constants>，
-外部文件会优先读取，因此，如果想让py文件的设定生效，需先删除外部的keysetting.cfg文件。
+Note: When running the app for the first time, a pop-up message will prompt '1KeySleep'
+to receive buttons from any application program. At this, 'System Preferences' should be opened,
+Allow 1KeySleep in the 'Security and Privacy' - 'Privacy' - 'Input Listening'
+and 'Auxiliary Functions' columns (check after unlocking)
 
-MacOs Bigsur 11.6.8 + Python 3.8.3 + pyinstaller 5.9.0 编译app通过
-(c) 2023 by CHFLAME, email:chflame@163.com
+It is recommended to add an app to the 'System Preferences' -' Users and Groups'
+- 'Login Items' to automatically launch this program with the system.
+
+Shortcut customization:
+FUNCTION_KEY should be one of control / option / command / shift,
+MASTER_KEY can be any key.
+
+For the packaged app, right-click on "Display Package Content" - Contents Resources
+and find keysetting.cfg, Open this file with 'text editing', modify the key values in
+the first three lines, save, and then run again.
+
+For the py file, keysetting.cfg will be generated in the folder "../Resources"
+during the first run.
+
+Another method is to directly modify the key definitions in the py code,
+which are located in<class Constants>.  External files will be read first,
+so if you want the settings of the py file to take effect,
+you need to first delete the external keysetting.cfg file.
+
+MacOs Bigsur 11.6.8 + Python 3.8.3 + pyinstaller 5.9.0 compilation passed
+(c) 2023 by Chflame, email:chflame@163.com
 """
 
 import os
 import sys
+import gettext
 from threading import Thread
 from pynput import keyboard
 import rumps
 
-# 设置常量
+# set constants
 class Constants:
     KEY_NAME_NOTICE = """
-# 请按下列键名设置按键
+# Please press the following key names to set the keys
 # 
-# 字母和数字用单引号包围:
-# 'a'  'b' ... '1'  '2' ...
-# 符号用单引号包围(除特殊字符外):
-# '`'  '='  '['  ';'  ','  '/' ...
-# 特殊字符:
-# 反斜杠需转义并用单引号包围: '\\\\'
-# 单引号用双引号包围: "'"
+# Letters and numbers directly express:
+# a b ... 1 2 ...
+# Symbols directly express too, but expressed with shift + other keys
+# (such as ~ ! @ # $ % ^ & * etc.) are not supported
+# ` = [ ] ; , . / ' ...
 #
-# 以下键名无需加引号
-# 功能修饰键(两侧等同): 
-# control键: Key.ctrl
-# option键: Key.alt
-# command键: Key.cmd
-# shift键: Key.shift
-# 
-# F键(PrtSc, ScrLk, Pause在Mac中被识别为F13, F14, F15): 
-# Key.f1  Key.f2 ... Key.f15
-# 
-# 其他键: 
-# Key.page_up  Key.page_down  Key.home  Key.end  Key.insert  Key.delete
-# Key.up  Key.down  Key.left  Key.right  key.tab  Key.caps_lock
-# Key.backspace  Key.esc  Key.space  Key.enter  Key.pad_enter  
+# Modification key (both sides equal): 
+# control key: ctrl
+# option key: alt
+# command key: cmd
+# shift key: shift
+# When the shift key is used as the first modifier, some key values will change 
+# and it is not recommended to use it with alphanumeric keys
 #
-# 以下键不确定能否触发
-# NumLock, fn, 以及其他不在上述范围内的的按键
+# F keys (PrtSc, ScrLk, Pause are recognized as F13, F14, F15 in MacOS):
+# f1 f2 ... f15
+#
+# Up, down, left, right keys: 
+# up down left right
+#
+# Other keys: 
+# page_up page_down home end insert delete tab caps_lock backspace esc space enter
+# Keypad enter:
+# pad_enter  
+# keypad NumLock：
+# num_lock
+#
+# Fn key has different key codes on different keyboards, and it is uncertain whether 
+# it can be triggered normally. It is also prone to conflicts with other modifier keys 
+# and is NOT RECOMMENDED to use.
+# fn
+#
+# Other Keys that are not within the above range have not been supported.
 """
-    # 默认按键
-    DEFAULT_FIRST_FUNCTION_KEY = "Key.ctrl"
-    DEFAULT_SECOND_FUNCTION_KEY = "Key.alt"
-    DEFAULT_MASTER_KEY = "Key.f15"
+    # default key
+    DEFAULT_FIRST_FUNCTION_KEY = "ctrl"
+    DEFAULT_SECOND_FUNCTION_KEY = "alt"
+    DEFAULT_MASTER_KEY = "f15"
 
-    # 保存设置文件名
+    # saved setting file name
     SETTING_FILENAME = os.path.join(os.path.join(os.path.dirname(os.path.dirname(sys.argv[0])),
                          "Resources"), "keysetting.cfg")
-    # 图标文件名
+    # icon file name
     ICON_FILENAME = os.path.join(os.path.join(os.path.dirname(os.path.dirname(sys.argv[0])),
                         "Resources"), "1KeySleep.icns")
 
-# 判断按键事件，睡眠函数
+# Key events, sleep functions
 class KeyboardMonitor:
 
-    # Ctrl键按下标识变量
+    # sign of the function key press down
     FIRST_FUNCTION_KEY_press:bool = False
     SECOND_FUNCTION_KEY_press:bool = False
 
-    # 键按下
+    # when key press
     def on_press(self, key):
-        print(key)
-        print(self.FIRST_FUNCTION_KEY_press,self.SECOND_FUNCTION_KEY_press)
-        press_key = str(key)
-        # 处理右修饰键
-        if press_key.endswith("_r"):
-            press_key = press_key.replace("_r", "")
-        # 处理insert
-        elif press_key == "'\\x05'":
-            press_key = "Key.insert"
-        # 处理小键盘enter
-        elif press_key == "'\\x03'":
-            press_key = "Key.pad_enter"
+        press_key = str(key).replace("Key.", "").replace("'", "").replace("_r", "")
+        # key insert
+        if str(key) == "'\\x05'":
+            press_key = "insert"
+        # keypad enter
+        elif str(key) == "'\\x03'":
+            press_key = "pad_enter"
+        # key '
+        elif str(key) == '''"'"''':
+            press_key = "'"
+        # key \
+        elif str(key) == "'\\\\'":
+            press_key = '\\'
+        # key NumLock
+        elif str(key) == "'\\x1b'":
+            press_key = "num_lock"
+        # key fn
+        elif str(key) == "<179>":
+            press_key = "fn"
 
         if press_key == StatusBarApp.MASTER_KEY and self.FIRST_FUNCTION_KEY_press \
                 and self.SECOND_FUNCTION_KEY_press:
@@ -104,109 +133,104 @@ class KeyboardMonitor:
         elif press_key == StatusBarApp.SECOND_FUNCTION_KEY:
             self.SECOND_FUNCTION_KEY_press = True
 
-    # 键弹起
+    # when key release
     def on_release(self, key):
-        release_key = str(key)
-        if release_key.endswith("_r"):
-            release_key = release_key.replace("_r", "")
+        release_key = str(key).replace("Key.", "").replace("'", "").replace("_r", "")
+        if str(key) == "<179>":
+            release_key = "fn"
         if release_key == StatusBarApp.FIRST_FUNCTION_KEY:
             self.FIRST_FUNCTION_KEY_press = False
         elif release_key == StatusBarApp.SECOND_FUNCTION_KEY:
             self.SECOND_FUNCTION_KEY_press = False
 
-    # 系统睡眠
+    # function of system sleep
     def system_sleep(self):
         os.system("pmset sleepnow")
 
-    # 关闭显示器
+    # function of turn off display
     def turn_off_display(self):
         os.system("pmset displaysleepnow")
 
 
-# 状态栏菜单
+# MacOS statusbar menu
 class StatusBarApp(rumps.App):
+
 
     def __init__(self):
         super(StatusBarApp, self).__init__("1KeySleep",
                 icon=Constants.ICON_FILENAME, quit_button=None)
 
-    # 用于显示的键名
+    # key name for menu display, replacing the modifier key symbol, and capitalizing the initial letter
     def order_key_name(self, keyname:str) -> str:
-        ret_str =  keyname.replace("Key.", ""
-                        ).replace("_r", ""
-                        ).replace("'", ""
-                        ).replace("cmd", "⌘"
+        ret_str =  keyname.replace("cmd", "⌘"
                         ).replace("ctrl", "⌃"
                         ).replace("alt", "⌥"
                         ).replace("shift", "⇧"
                         ).title().rstrip()
-        # 处理单引号
-        if keyname == '''"'"''':
-            ret_str = "'"
-        elif keyname == "'\\x05'":
-            ret_str = "insert"
-        elif keyname == "'\\x03'":
-            ret_str = "pad_enter"
         return ret_str
 
-    # 从外部文件读取设置
+    # load settings from an external file
     def load_setting(self):
         try:
             with open(Constants.SETTING_FILENAME, "r") as f:
                 setting_list = f.readlines()
-                print("success load settings")
         except:
-            print(".cfg file not found!")
             pass
         if setting_list:
             FIRST_FUNCTION_KEY = setting_list[0][setting_list[0].find("=") + 1:-1]
             SECOND_FUNCTION_KEY = setting_list[1][setting_list[1].find("=") + 1:-1]
             MASTER_KEY = setting_list[2][setting_list[2].find("=") + 1:-1]
 
-            return FIRST_FUNCTION_KEY, \
-                   SECOND_FUNCTION_KEY, \
-                   MASTER_KEY
+            return FIRST_FUNCTION_KEY.lower().lstrip().rstrip(), \
+                   SECOND_FUNCTION_KEY.lower().lstrip().rstrip(), \
+                   MASTER_KEY.lower().lstrip().rstrip()
         else:
             return Constants.DEFAULT_FIRST_FUNCTION_KEY, \
                    Constants.DEFAULT_SECOND_FUNCTION_KEY, \
                    Constants.DEFAULT_MASTER_KEY
 
     def save_setting(self):
+
+        NOTIC_HEAD_TEXT = ("# *********************NOTICE***********************\n" +
+                          "# Set the key name in the first three lines, please keep the original format.\n" +
+                          "# Excess characters may cause errors" )
         write_str = ("FIRST_FUNCTION_KEY=" + Constants.DEFAULT_FIRST_FUNCTION_KEY + "\n" +
                      "SECOND_FUNCTION_KEY=" + Constants.DEFAULT_SECOND_FUNCTION_KEY + "\n" +
                      "MASTER_KEY=" + Constants.DEFAULT_MASTER_KEY + "\n" + "\n" +
-                     "# *********************NOTICE***********************\n"
-                     "# 本文件前3行设置按键，保持原有格式，多余字符可能导致软件错误" +
-                     Constants.KEY_NAME_NOTICE
+                     NOTIC_HEAD_TEXT + Constants.KEY_NAME_NOTICE
                     )
         try:
             with open(Constants.SETTING_FILENAME, "w") as f:
                 f.write(write_str)
-                print("success save settings")
-        except:
-            print("save failed")
+        except OSError:
             pass
 
-    # 如果没有设置文件则保存一个
+    # if not exist settings file, save one
     if not os.path.isfile(Constants.SETTING_FILENAME):
         save_setting(None)
 
-    # 读取设置
+    # load setting
     FIRST_FUNCTION_KEY, SECOND_FUNCTION_KEY, MASTER_KEY = load_setting(None)
-    print(FIRST_FUNCTION_KEY,SECOND_FUNCTION_KEY,MASTER_KEY)
-    # 设置任务栏菜单显示文字
+
+    # define Language translator
+    lang_dir = os.path.join(os.path.join(os.path.dirname(os.path.dirname(sys.argv[0])),
+                                    "Resources"), "locale")
+    lang_zh = gettext.translation("multi_language", localedir = lang_dir, languages = ["zh"])
+    lang_zh.install("multi_language")
+    _ = lang_zh.gettext
+
+    # set status bar menu text
     first_keyname = order_key_name(None, FIRST_FUNCTION_KEY)
     second_keyname = order_key_name(None, SECOND_FUNCTION_KEY)
     master_keyname = order_key_name(None, MASTER_KEY)
-
-    menu_turn_off_display_text = ("🖥关闭显示器     "
+    menu_turn_off_display_text = ("🖥 " + _("Turn off display") + "     "
                                   + first_keyname + " "
                                   + master_keyname)
-    menu_system_sleep_text = ("💡系统睡眠         "
+    menu_system_sleep_text = ("💡 " + _("System sleep") + "         "
                               + first_keyname + " "
                               + second_keyname + " "
                               + master_keyname)
-    menu_exit_text = "🏃🏻退出"
+    menu_exit_text = "🏃🏻 " + _("Quit")
 
     @rumps.clicked(menu_turn_off_display_text)
     def turn_off_display(self, *args):
@@ -220,7 +244,7 @@ class StatusBarApp(rumps.App):
     def exit(self, *args):
         rumps.quit_application()
 
-# 后台键盘监控线程
+# keyboard monitor thread
 def run_monitor():
     kb_monitor = KeyboardMonitor()
     listener = keyboard.Listener(on_press=kb_monitor.on_press, on_release=kb_monitor.on_release)
@@ -228,7 +252,7 @@ def run_monitor():
     listener.join()
 
 if __name__ == "__main__":
-    # 设置线程
+    # set threads
     thread_kb_monitor = Thread(target=run_monitor)
     thread_kb_monitor.setDaemon(True)
     status_bar_app = StatusBarApp()
