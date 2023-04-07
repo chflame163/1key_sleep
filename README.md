@@ -1,5 +1,8 @@
 # 1key_sleep
- Press shotcut key to sleep system or turn off display, on MacOS
+Press shotcut key to sleep system or turn off display, on MacOS.
+
+
+The currently released version of the menu language is Simplified Chinese.
 
 ## How to use?
 When this program is running, press the shortcut key will trigger the following functions:
