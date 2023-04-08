@@ -32,7 +32,7 @@ which are located in<class Constants>.  External files will be read first,
 so if you want the settings of the py file to take effect,
 you need to first delete the external keysetting.cfg file.
 
-MacOs Bigsur 11.6.8 + Python 3.8.3 + pyinstaller 5.9.0 compilation passed
+MacOs Bigsur 11.6.8 + Python 3.8.3 + pyinstaller 5.9 compilation passed
 (c) 2023 by Chflame, email:chflame@163.com
 """
 
@@ -98,8 +98,8 @@ class Constants:
 class KeyboardMonitor:
 
     # sign of the function key press down
-    FIRST_FUNCTION_KEY_press:bool = False
-    SECOND_FUNCTION_KEY_press:bool = False
+    first_key_is_press:bool = False
+    second_key_is_press:bool = False
 
     # when key press
     def on_press(self, key):
@@ -123,15 +123,15 @@ class KeyboardMonitor:
         elif str(key) == "<179>":
             press_key = "fn"
 
-        if press_key == StatusBarApp.MASTER_KEY and self.FIRST_FUNCTION_KEY_press \
-                and self.SECOND_FUNCTION_KEY_press:
+        if press_key == StatusBarApp.MASTER_KEY and self.first_key_is_press \
+                and self.second_key_is_press:
             self.system_sleep()
-        elif press_key == StatusBarApp.MASTER_KEY and self.FIRST_FUNCTION_KEY_press:
+        elif press_key == StatusBarApp.MASTER_KEY and self.first_key_is_press:
             self.turn_off_display()
         elif press_key == StatusBarApp.FIRST_FUNCTION_KEY:
-            self.FIRST_FUNCTION_KEY_press = True
+            self.first_key_is_press = True
         elif press_key == StatusBarApp.SECOND_FUNCTION_KEY:
-            self.SECOND_FUNCTION_KEY_press = True
+            self.second_key_is_press = True
 
     # when key release
     def on_release(self, key):
@@ -139,9 +139,9 @@ class KeyboardMonitor:
         if str(key) == "<179>":
             release_key = "fn"
         if release_key == StatusBarApp.FIRST_FUNCTION_KEY:
-            self.FIRST_FUNCTION_KEY_press = False
+            self.first_key_is_press = False
         elif release_key == StatusBarApp.SECOND_FUNCTION_KEY:
-            self.SECOND_FUNCTION_KEY_press = False
+            self.second_key_is_press = False
 
     # function of system sleep
     def system_sleep(self):
@@ -155,12 +155,12 @@ class KeyboardMonitor:
 # MacOS statusbar menu
 class StatusBarApp(rumps.App):
 
-
     def __init__(self):
         super(StatusBarApp, self).__init__("1KeySleep",
                 icon=Constants.ICON_FILENAME, quit_button=None)
 
-    # key name for menu display, replacing the modifier key symbol, and capitalizing the initial letter
+    # key name for menu display, replacing the modifier key symbol,
+    # and capitalizing the initial letter
     def order_key_name(self, keyname:str) -> str:
         ret_str =  keyname.replace("cmd", "⌘"
                         ).replace("ctrl", "⌃"
@@ -205,6 +205,25 @@ class StatusBarApp(rumps.App):
         except OSError:
             pass
 
+    # this method is take place of 'locale.getdefaultlocale()'
+    # because I don't know why that return None in packaged MacOS app
+    def get_sys_encodeing(self):
+        mac_external_string_encodings: dict = {1: "Japanese",
+                                               2: "ChineseTrad",
+                                               3: "Korean",
+                                               25: "ChineseSimp"
+                                               }
+        try:
+            hex_encoding = os.environ.get('__CF_USER_TEXT_ENCODING').split(":")[1]
+            lang_index = int(hex_encoding, base=16)
+        except:
+            pass
+
+        if lang_index in mac_external_string_encodings.keys():
+            return mac_external_string_encodings.get(lang_index)
+        else:
+            return "Not Find"
+
     # if not exist settings file, save one
     if not os.path.isfile(Constants.SETTING_FILENAME):
         save_setting(None)
@@ -215,18 +234,29 @@ class StatusBarApp(rumps.App):
     # define Language translator
     lang_dir = os.path.join(os.path.join(os.path.dirname(os.path.dirname(sys.argv[0])),
                                     "Resources"), "locale")
-    lang_zh = gettext.translation("multi_language", localedir = lang_dir, languages = ["zh"])
-    lang_zh.install("multi_language")
-    _ = lang_zh.gettext
+    lang = get_sys_encodeing(None)
+    if lang == "ChineseSimp":
+        translator = gettext.translation("multi_language", localedir = lang_dir, languages = ["zh_CN"])
+    elif lang == "ChineseTrad":
+        translator = gettext.translation("multi_language", localedir = lang_dir, languages = ["zh_TW"])
+    elif lang == "Japanese":
+        translator = gettext.translation("multi_language", localedir = lang_dir, languages = ["ja_JP"])
+    elif lang == "Korean":
+        translator = gettext.translation("multi_language", localedir = lang_dir, languages = ["ko_KR"])
+    else:
+        translator = gettext.translation("multi_language", localedir=lang_dir, languages=["en_US"])
+
+    translator.install("multi_language")
+    _ = translator.gettext
 
     # set status bar menu text
     first_keyname = order_key_name(None, FIRST_FUNCTION_KEY)
     second_keyname = order_key_name(None, SECOND_FUNCTION_KEY)
     master_keyname = order_key_name(None, MASTER_KEY)
-    menu_turn_off_display_text = ("🖥 " + _("Turn off display") + "     "
+    menu_turn_off_display_text = ("🖥 " + _("Turn off display")
                                   + first_keyname + " "
                                   + master_keyname)
-    menu_system_sleep_text = ("💡 " + _("System sleep") + "         "
+    menu_system_sleep_text = ("💡 " + _("System sleep")
                               + first_keyname + " "
                               + second_keyname + " "
                               + master_keyname)
