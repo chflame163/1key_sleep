@@ -246,7 +246,6 @@ class StatusBarApp(rumps.App):
     else:
         translator = gettext.translation("multi_language", localedir=lang_dir, languages=["en_US"])
 
-    translator = gettext.translation("multi_language", localedir=lang_dir, languages=["en_US"])
     translator.install("multi_language")
     _ = translator.gettext
 
