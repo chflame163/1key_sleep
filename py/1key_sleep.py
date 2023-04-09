@@ -218,11 +218,7 @@ class StatusBarApp(rumps.App):
             lang_index = int(hex_encoding, base=16)
         except:
             pass
-
-        if lang_index in mac_external_string_encodings.keys():
-            return mac_external_string_encodings.get(lang_index)
-        else:
-            return "Not Find"
+        return mac_external_string_encodings.get(lang_index, "Other") 
 
     # if not exist settings file, save one
     if not os.path.isfile(Constants.SETTING_FILENAME):
