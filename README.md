@@ -4,8 +4,8 @@ Release v1.0.2 support the menu language with English，Simplified Chinese, Trad
 
 ## How to use?
 When this program is running, press the shortcut key will trigger the following functions:  
-- press FIRST-FUNCTION_KEY + MASTER_KEY = "Turn off display"  
-- press FIRSTFUNCTION_KEY + SECOND_FUNCTION_KEY + MASTER_KEY = "System sleep"  
+- press CONTROL + F15 to Turn off display  
+- press CONTROL + OPTION + F15 to System sleep  
 
 At the same time, the "Moon" icon displayed in the MacOS system status bar, the menu appears by clicking on it:  
 - "Turn off display"  
@@ -14,7 +14,7 @@ At the same time, the "Moon" icon displayed in the MacOS system status bar, the 
 
 Clicking on the menu also triggers the corresponding function.  
 
-Default FIRST_FUNCTION_KEY are defined to 'CTRL', SECOND_FUNCTION_KEY defined to 'OPTION', and MASTER_KEY defined to 'F15'. you can change it by yourself.  
+Default FIRST_FUNCTION_KEY are defined to 'CONTROL', SECOND_FUNCTION_KEY defined to 'OPTION', and MASTER_KEY defined to 'F15'. you can change it by yourself.  
 
 Note: When running the app for the first time, a pop-up message will prompt '1KeySleep' to receive buttons from any application program. At this time, 'System Preferences' should be opened, Allow 1KeySleep in the 'Security and Privacy' - 'Privacy' - 'Input Listening' and 'Auxiliary Functions' columns (check after unlocking)
 
@@ -22,7 +22,7 @@ It is recommended to add an app to the 'System Preferences' -' Users and Groups'
 
 ## Shortcut customization:
 
-- FUNCTION_ KEY should be one of CTRL / OPTION / COMMAND / SHIFT
+- The FUNCTION_ KEY should be one of CONTROL / OPTION / COMMAND / SHIFT
 
 - MASTER_ KEY can be any key
 

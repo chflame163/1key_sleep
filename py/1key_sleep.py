@@ -2,11 +2,19 @@
 ****MacOS version one click sleep, with shortcut keys to turn off monitor/system sleep****
 
 Pressing the shortcut key will trigger the following functions:
-"FIRST_FUNCTION_KEY" + "MASTER_KEY" = "Turn off display"
-"FIRST_FUNCTION_KEY" + "SECOND_FUNCTION_KEY" + "MASTER_KEY" = "System sleep"
+CONTROL + F15 to Turn off display
+CONTROL + COMMAND + F15 to System sleep
+
 At the same time, the "Moon" icon is displayed in the Mac OS system status bar,
-and the menu appears by clicking on it: "Turn off display", "System sleep", "Quit",
+and the menu appears by clicking on it:
+  Turn off display
+  System sleep
+  Quit
 Clicking on the menu also triggers the corresponding function.
+
+Default FIRST_MODIFIERS_KEY are defined to 'CONTROL',
+SECOND_MODIFIERS_KEY defined to 'OPTION',
+and MASTER_KEY defined to 'F15'. you can change it by yourself.
 
 Note: When running the app for the first time, a pop-up message will prompt '1KeySleep'
 to receive buttons from any application program. At this, 'System Preferences' should be opened,
@@ -17,22 +25,21 @@ It is recommended to add an app to the 'System Preferences' -' Users and Groups'
 - 'Login Items' to automatically launch this program with the system.
 
 Shortcut customization:
-FUNCTION_KEY should be one of control / option / command / shift,
+MODIFIERS_KEY should be one of CONTROL / OPTION / COMMAND / SHIFT,
 MASTER_KEY can be any key.
 
-For the packaged app, right-click on "Display Package Content" - Contents Resources
-and find keysetting.cfg, Open this file with 'text editing', modify the key values in
+For the packaged app, right-click on 'Display Package Content' - Contents/Resources/
+and find the file 'keysetting.cfg', Open it with text editor, modify the key values in
 the first three lines, save, and then run again.
 
-For the py file, keysetting.cfg will be generated in the folder "../Resources"
+For the py file, 'keysetting.cfg' will be generated in the folder "../Resources/"
 during the first run.
 
-Another method is to directly modify the key definitions in the py code,
-which are located in<class Constants>.  External files will be read first,
-so if you want the settings of the py file to take effect,
-you need to first delete the external keysetting.cfg file.
+Another method is to directly modify the key definitions in the py source code,
+which are located in , but the external config file will be read first when program running,
+so you need delete the external file 'keysetting.cfg' before run it.
 
-MacOs Bigsur 11.6.8 + Python 3.8.3 + pyinstaller 5.9 compilation passed
+MacOs Bigsur + Python 3.8.3 + pyinstaller 5.9 compilation passed
 (c) 2023 by Chflame, email:chflame@163.com
 """
 
@@ -83,8 +90,8 @@ class Constants:
 # Other Keys that are not within the above range have not been supported.
 """
     # default key
-    DEFAULT_FIRST_FUNCTION_KEY = "ctrl"
-    DEFAULT_SECOND_FUNCTION_KEY = "alt"
+    DEFAULT_FIRST_MODIFIERS_KEY = "ctrl"
+    DEFAULT_SECOND_MODIFIERS_KEY = "alt"
     DEFAULT_MASTER_KEY = "f15"
 
     # saved setting file name
@@ -128,9 +135,9 @@ class KeyboardMonitor:
             self.system_sleep()
         elif press_key == StatusBarApp.MASTER_KEY and self.first_key_is_press:
             self.turn_off_display()
-        elif press_key == StatusBarApp.FIRST_FUNCTION_KEY:
+        elif press_key == StatusBarApp.FIRST_MODIFIERS_KEY:
             self.first_key_is_press = True
-        elif press_key == StatusBarApp.SECOND_FUNCTION_KEY:
+        elif press_key == StatusBarApp.SECOND_MODIFIERS_KEY:
             self.second_key_is_press = True
 
     # when key release
@@ -138,9 +145,9 @@ class KeyboardMonitor:
         release_key = str(key).replace("Key.", "").replace("'", "").replace("_r", "")
         if str(key) == "<179>":
             release_key = "fn"
-        if release_key == StatusBarApp.FIRST_FUNCTION_KEY:
+        if release_key == StatusBarApp.FIRST_MODIFIERS_KEY:
             self.first_key_is_press = False
-        elif release_key == StatusBarApp.SECOND_FUNCTION_KEY:
+        elif release_key == StatusBarApp.SECOND_MODIFIERS_KEY:
             self.second_key_is_press = False
 
     # function of system sleep
@@ -177,16 +184,16 @@ class StatusBarApp(rumps.App):
         except:
             pass
         if setting_list:
-            FIRST_FUNCTION_KEY = setting_list[0][setting_list[0].find("=") + 1:-1]
-            SECOND_FUNCTION_KEY = setting_list[1][setting_list[1].find("=") + 1:-1]
+            FIRST_MODIFIERS_KEY = setting_list[0][setting_list[0].find("=") + 1:-1]
+            SECOND_MODIFIERS_KEY = setting_list[1][setting_list[1].find("=") + 1:-1]
             MASTER_KEY = setting_list[2][setting_list[2].find("=") + 1:-1]
 
-            return FIRST_FUNCTION_KEY.lower().lstrip().rstrip(), \
-                   SECOND_FUNCTION_KEY.lower().lstrip().rstrip(), \
+            return FIRST_MODIFIERS_KEY.lower().lstrip().rstrip(), \
+                   SECOND_MODIFIERS_KEY.lower().lstrip().rstrip(), \
                    MASTER_KEY.lower().lstrip().rstrip()
         else:
-            return Constants.DEFAULT_FIRST_FUNCTION_KEY, \
-                   Constants.DEFAULT_SECOND_FUNCTION_KEY, \
+            return Constants.DEFAULT_FIRST_MODIFIERS_KEY, \
+                   Constants.DEFAULT_SECOND_MODIFIERS_KEY, \
                    Constants.DEFAULT_MASTER_KEY
 
     def save_setting(self):
@@ -194,8 +201,8 @@ class StatusBarApp(rumps.App):
         NOTIC_HEAD_TEXT = ("# *********************NOTICE***********************\n" +
                           "# Set the key name in the first three lines, please keep the original format.\n" +
                           "# Excess characters may cause errors" )
-        write_str = ("FIRST_FUNCTION_KEY=" + Constants.DEFAULT_FIRST_FUNCTION_KEY + "\n" +
-                     "SECOND_FUNCTION_KEY=" + Constants.DEFAULT_SECOND_FUNCTION_KEY + "\n" +
+        write_str = ("FIRST_MODIFIERS_KEY=" + Constants.DEFAULT_FIRST_MODIFIERS_KEY + "\n" +
+                     "SECOND_MODIFIERS_KEY=" + Constants.DEFAULT_SECOND_MODIFIERS_KEY + "\n" +
                      "MASTER_KEY=" + Constants.DEFAULT_MASTER_KEY + "\n" + "\n" +
                      NOTIC_HEAD_TEXT + Constants.KEY_NAME_NOTICE
                     )
@@ -225,7 +232,7 @@ class StatusBarApp(rumps.App):
         save_setting(None)
 
     # load setting
-    FIRST_FUNCTION_KEY, SECOND_FUNCTION_KEY, MASTER_KEY = load_setting(None)
+    FIRST_MODIFIERS_KEY, SECOND_MODIFIERS_KEY, MASTER_KEY = load_setting(None)
 
     # define Language translator
     lang_dir = os.path.join(os.path.join(os.path.dirname(os.path.dirname(sys.argv[0])),
@@ -246,8 +253,8 @@ class StatusBarApp(rumps.App):
     _ = translator.gettext
 
     # set status bar menu text
-    first_keyname = order_key_name(None, FIRST_FUNCTION_KEY)
-    second_keyname = order_key_name(None, SECOND_FUNCTION_KEY)
+    first_keyname = order_key_name(None, FIRST_MODIFIERS_KEY)
+    second_keyname = order_key_name(None, SECOND_MODIFIERS_KEY)
     master_keyname = order_key_name(None, MASTER_KEY)
     menu_turn_off_display_text = ("🖥 " + _("Turn off display")
                                   + first_keyname + " "
