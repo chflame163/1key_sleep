@@ -7,9 +7,9 @@ CONTROL + COMMAND + F15 to System sleep
 
 At the same time, the "Moon" icon is displayed in the Mac OS system status bar,
 and the menu appears by clicking on it:
-  Turn off display
-  System sleep
-  Quit
+ - Turn off display
+ - System sleep
+ - Quit
 Clicking on the menu also triggers the corresponding function.
 
 Default FIRST_MODIFIERS_KEY are defined to 'CONTROL',
@@ -66,26 +66,27 @@ class Constants:
 # option key: alt
 # command key: cmd
 # shift key: shift
-# When the shift key is used as the first modifier, some key values will change 
+# When the shift key is used as the FIRST_MODIFIERS_KEY, some key values will change 
 # and it is not recommended to use it with alphanumeric keys
 #
 # F keys (PrtSc, ScrLk, Pause are recognized as F13, F14, F15 in MacOS):
 # f1 f2 ... f15
 #
-# Up, down, left, right keys: 
-# up down left right
-#
 # Other keys: 
-# page_up page_down home end insert delete tab caps_lock backspace esc space enter
+# up down left right page_up page_down home end insert delete tab 
+# caps_lock backspace esc space enter
+#
 # Keypad enter:
 # pad_enter  
+#
 # keypad NumLock：
 # num_lock
 #
-# Fn key has different key codes on different keyboards, and it is uncertain whether 
-# it can be triggered normally. It is also prone to conflicts with other modifier keys 
-# and is NOT RECOMMENDED to use.
+# Fn: 
 # fn
+# The Fn key has different key codes on various keyboards, and uncertain whether it 
+# can be triggered normally. It is also prone to conflicts with other modifiers key 
+# and is NOT RECOMMENDED to use.
 #
 # Other Keys that are not within the above range have not been supported.
 """
