@@ -1,5 +1,5 @@
 """
-****MacOS version one click sleep, with shortcut keys to turn off monitor/system sleep****
+****A app for MacOS that press shortcut key to turn off display / system sleep****
 
 Pressing the shortcut key will trigger the following functions:
 CONTROL + F15 to Turn off display
